@@ -17,8 +17,21 @@
             margin: 0;
             text-align: center;
             transition: background 0.1s;
+            min-height: 100vh;
         }
-        
+
+        dvp-footer {
+          margin-top: auto;
+        }
+
+        main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
         /* The aggressive flash when triggered */
         body.alert-mode {
             background: #e94560;
@@ -27,7 +40,7 @@
         h1 { margin-bottom: 5px; }
         p { color: #a9b0c0; margin-bottom: 30px; transition: color 0.1s; }
         body.alert-mode p { color: white; }
-        
+
         .controls {
             background: #16213e;
             padding: 20px;
@@ -52,7 +65,7 @@
         }
         button:hover { background: #44bd32; }
         button:disabled { background: #7f8fa6; cursor: not-allowed; }
-        
+
         .meter-container {
             width: 100%;
             height: 30px;
@@ -73,13 +86,13 @@
     </style>
 </head>
 <body>
-
+  <main>
     <h1>Стига викали</h1>
     <p>Calibrate threshold. Too loud = Alarm.</p>
 
     <div class="controls">
         <button id="start-btn">Start Listening</button>
-        
+
         <label>Live Room Volume</label>
         <div class="meter-container">
             <div id="volume-bar"></div>
@@ -106,12 +119,12 @@
         });
 
         startBtn.addEventListener('click', async () => {
-            if (isListening) return; 
-            
+            if (isListening) return;
+
             try {
                 // 1. Request microphone access
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
+
                 // 2. Initialize Audio Engine strictly ON USER CLICK to bypass autoplay blocks
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioContext.state === 'suspended') {
@@ -120,10 +133,10 @@
 
                 analyser = audioContext.createAnalyser();
                 microphone = audioContext.createMediaStreamSource(stream);
-                
+
                 microphone.connect(analyser);
                 analyser.fftSize = 256;
-                
+
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
 
@@ -148,7 +161,7 @@
 
                     // Update visualizer
                     volumeBar.style.width = volumePercent + "%";
-                    
+
                     const threshold = parseInt(thresholdSlider.value);
                     if (volumePercent > threshold - 10) {
                         volumeBar.style.background = "#e94560"; // Danger Zone
@@ -173,37 +186,41 @@
         // --- THE ALARM GENERATOR ---
         function triggerAlarm() {
             isAlarmPlaying = true;
-            
+
             // Visual trigger: Turn background red
             document.body.classList.add('alert-mode');
-            
+
             // Create a harsh 'square' wave oscillator (like a fire alarm buzzer)
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
+
             oscillator.type = 'square';
             oscillator.frequency.setValueAtTime(600, audioContext.currentTime); // Pitch (Hz)
-            
+
             gainNode.gain.setValueAtTime(1.0, audioContext.currentTime); // Max internal volume
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
+
             // Start the alarm
             oscillator.start();
-            
+
             // Stop the alarm after 1.5 seconds
             setTimeout(() => {
                 oscillator.stop();
                 document.body.classList.remove('alert-mode'); // Remove red background
-                
+
                 // 3-second cooldown before it can trigger again
                 setTimeout(() => {
                     isAlarmPlaying = false;
                 }, 3000);
-                
+
             }, 1500);
         }
     </script>
+  </main>
+
+  <script src="https://dailyvibeprojects.github.io/dvp-footer.js"></script>
+  <dvp-footer></dvp-footer>
 </body>
 </html>
