@@ -1,5 +1,5 @@
 # shusher.github.io
-Shush your surroundings
+Auto-Shush your surroundings
 
 
 ## Why
